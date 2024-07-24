@@ -1,9 +1,10 @@
 import {Schema, model} from 'mongoose';
+import * as mongoose from "mongoose";
 
 export const UserSchema = new Schema({
     id: {
         type: String,
-        default: () => new Schema.Types.ObjectId(),
+        default: () => new mongoose.Types.ObjectId(),
         unique: true,
     },
     email: {
