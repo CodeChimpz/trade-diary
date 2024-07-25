@@ -3,7 +3,6 @@ import {Schema, model} from 'mongoose';
 import {IUser} from "./User.schema";
 
 export interface ITrade {
-    _id: string,
     ticker: string,
     position: 'Long' | 'Short',
     trend: 'Up' | 'Down',
@@ -11,17 +10,17 @@ export interface ITrade {
     enter: number,
     stop: number,
     firstTake: string,
-    secondTake: string | null,
-    thirdTake: string | null,
+    secondTake?: string ,
+    thirdTake?: string ,
     risk: 0.5 | 1 | 2 | 3,
-    lost: number,
-    profit: string
+    lost?: number,
+    profit?: number
     depositBefore: number,
     amount: number,
-    depositAfter: number,
-    resultValue: number,
+    depositAfter?: number,
+    resultValue?: number,
     result: string,
-    closedManually: boolean,
+    closedManually?: boolean,
     createdBy: Partial<IUser>,
     dateCreated: Date
 }
@@ -110,7 +109,7 @@ export const TradeSchema = new Schema<ITrade>({
         required: false,
     },
     profit: {
-        type: String,
+        type: Number,
         required: false,
     },
     depositBefore: {

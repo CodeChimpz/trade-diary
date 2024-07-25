@@ -1,19 +1,20 @@
-import { TradeEnums} from "./trade.types";
+import {TradeEnums} from "./trade.types";
 
 export type TradeRequestData = {
-    ticker: number,
+    ticker: string,
     position: TradeEnums.Positions,
     trend: TradeEnums.Trends,
     order: TradeEnums.Orders,
     enter: number,
     stop: number,
     firstTake: string,
-    secondTake? :string,
-    thirdTake? :string,
+    secondTake?: string,
+    thirdTake?: string,
     risk: TradeEnums.Risks,
 }
 
 export type TradeUpdateData = {
     result: TradeEnums.Results,
-    closedManually : boolean
+    resultValue: number,
+    closedManually: boolean
 }

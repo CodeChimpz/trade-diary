@@ -7,6 +7,7 @@ export interface IUser {
     password: string,
     name: string,
     initialDeposit: number,
+    currentDeposit: number,
     dateCreated: Date
 }
 
@@ -26,6 +27,11 @@ export const UserSchema = new Schema<IUser>({
         required: true,
     },
     initialDeposit: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    currentDeposit: {
         type: Number,
         required: true,
         min: 0,
