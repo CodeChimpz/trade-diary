@@ -1,12 +1,16 @@
 import {Schema, model} from 'mongoose';
 import * as mongoose from "mongoose";
 
-export const UserSchema = new Schema({
-    id: {
-        type: String,
-        default: () => new mongoose.Types.ObjectId(),
-        unique: true,
-    },
+export interface IUser {
+    _id: string,
+    email: string,
+    password: string,
+    name: string,
+    initialDeposit: number,
+    dateCreated: Date
+}
+
+export const UserSchema = new Schema<IUser>({
     email: {
         type: String,
         required: true,
@@ -26,8 +30,12 @@ export const UserSchema = new Schema({
         required: true,
         min: 0,
     },
-}, {
-    timestamps: true
+    dateCreated: {
+        type: Date,
+        default: Date.now
+    },
 });
 
-export const User = model('User', UserSchema);
+export type UserModel = mongoose.Model<IUser>
+
+export const User = model<IUser>('User', UserSchema);

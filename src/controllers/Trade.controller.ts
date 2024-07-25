@@ -1,8 +1,11 @@
 import {Request, Response} from 'express'
-import {tradeService} from "../services/Trade.service";
+import {TradeService, tradeService} from "../services/Trade.service";
 
 export class TradeController {
-    constructor() {
+    service: TradeService
+
+    constructor(service: TradeService) {
+        this.service = service
     }
 
     getTrades = async (req: Request, res: Response) => {
@@ -18,10 +21,25 @@ export class TradeController {
     }
 
     postTrade = async (req: Request, res: Response) => {
+        //todo : interceptor decorator
+        try {
+            const payload = req.body
+            const userId = req.params.userId
+            const data = await this.service.postTrade(userId, payload)
+            if (!data) {
+                res.status(404).json({message: 'Couldn\'t post trade , check data accuracy and user id'})
+            }
+            res.status(200).json(data);
+        } catch (e) {
+            res.status(500).json({message: 'Server error'})
+        }
+    }
+
+    closeTrade = async (req: Request, res: Response) => {
         //logic
         const data = {}
         res.status(200).json(data);
     }
 }
 
-export const tradeController = new TradeController()
+export const tradeController = new TradeController(tradeService)

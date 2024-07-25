@@ -1,7 +1,32 @@
 import * as mongoose from 'mongoose';
-import { Schema, model } from 'mongoose';
+import {Schema, model} from 'mongoose';
+import {IUser} from "./User.schema";
 
-export const TradeSchema = new Schema({
+export interface ITrade {
+    _id: string,
+    ticker: string,
+    position: 'Long' | 'Short',
+    trend: 'Up' | 'Down',
+    order: 'Limit' | 'Market',
+    enter: number,
+    stop: number,
+    firstTake: string,
+    secondTake: string | null,
+    thirdTake: string | null,
+    risk: 0.5 | 1 | 2 | 3,
+    lost: number,
+    profit: string
+    depositBefore: number,
+    amount: number,
+    depositAfter: number,
+    resultValue: number,
+    result: string,
+    closedManually: boolean,
+    createdBy: Partial<IUser>,
+    dateCreated: Date
+}
+
+export const TradeSchema = new Schema<ITrade>({
     ticker: {
         minLength: 5,
         maxLength: 15,
@@ -82,11 +107,11 @@ export const TradeSchema = new Schema({
     },
     lost: {
         type: Number,
-        required: true,
+        required: false,
     },
     profit: {
         type: String,
-        required: true,
+        required: false,
     },
     depositBefore: {
         type: Number,
@@ -94,7 +119,7 @@ export const TradeSchema = new Schema({
     },
     amount: {
         type: Number,
-        required: true,
+        required: false,
     },
     depositAfter: {
         type: Number,
@@ -127,4 +152,6 @@ export const TradeSchema = new Schema({
     },
 });
 
-export const Trade = model('Trade', TradeSchema);
+
+export const Trade = model<ITrade>('Trade', TradeSchema);
+export type TradeModel = typeof Trade
