@@ -1,4 +1,5 @@
 import {ITrade} from "../schema/Trade.schema";
+import {TradeEnums} from "../types/trade.types";
 
 export class CalcService {
     static getPercent(value: number, percent: number) {
@@ -46,5 +47,16 @@ export class CalcService {
         }
         const percent = Number(take.split('/')[1].match(/[0-9]/))
         return {value: +take.split('/')[0], percent}
+    }
+
+    static calcClosedTrade(trade: ITrade) {
+        const isProfit = trade.result === TradeEnums.Results.Success
+        const resultValue = trade.resultValue ||
+            (isProfit ? trade.profit : trade.lost) || 0
+        const depositAfter = isProfit ? resultValue + trade.depositBefore : trade.depositBefore - resultValue
+        return {
+            resultValue,
+            depositAfter
+        }
     }
 }

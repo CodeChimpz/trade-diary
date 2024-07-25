@@ -1,8 +1,9 @@
 import {ITrade, Trade, TradeModel} from "../schema/Trade.schema";
 import {userService, UserService} from "./User.service";
-import {TradeRequestData} from "../types/request";
+import {TradeRequestData, TradeUpdateData} from "../types/request";
 import {IUser} from "../schema/User.schema";
 import {CalcService} from "../util/Calc.service";
+import {TradeEnums} from "../types/trade.types";
 
 export class TradeService {
     schema: TradeModel
@@ -13,13 +14,36 @@ export class TradeService {
         this.userService = userService
     }
 
-    getTrades = async () => {
-
+    getTrades = async (userId: string,) => {
+        const results = await this.schema.find({
+            createdBy: {
+                _id: userId
+            }
+        })
+        return results.map(row =>
+            this.formatTradePayload(row))
     }
 
-    getTrade = async () => {
-
+    deleteTrade = async (tradeId: string,) => {
+        return this.schema.findOneAndDelete({_id: tradeId})
     }
+
+    editTrade = async (tradeId: string, payload: TradeUpdateData) => {
+        const trade = await this.schema.findById(tradeId)
+        if (!trade || trade.result !== TradeEnums.Results.Process) {
+            return null
+        }
+        const {result, resultValue, closedManually} = payload
+        trade.result = result
+        trade.resultValue = resultValue
+        trade.closedManually = closedManually
+        const calculated = CalcService.calcClosedTrade(trade)
+        trade.resultValue = calculated.resultValue
+        trade.depositAfter = calculated.depositAfter
+        const updated = await trade.save()
+        return this.formatTradePayload(updated)
+    }
+
 
     postTrade = async (userId: string, payload: TradeRequestData) => {
         const user = await this.userService.getById(userId)
@@ -28,7 +52,7 @@ export class TradeService {
         }
         const data = this.createTradePayload(payload, user)
         const created = await this.schema.create(data)
-        return this.processTradePayload(created)
+        return this.formatTradePayload(created)
     }
 
     private createTradePayload = (payload: TradeRequestData, userData: IUser): ITrade => {
@@ -48,7 +72,7 @@ export class TradeService {
         return data
     }
 
-    private processTradePayload = (data: ITrade) => {
+    private formatTradePayload = (data: ITrade) => {
         return data
     }
 }

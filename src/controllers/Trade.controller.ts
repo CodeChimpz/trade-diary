@@ -9,15 +9,40 @@ export class TradeController {
     }
 
     getTrades = async (req: Request, res: Response) => {
-        //logic
-        const data = tradeService.getTrades()
-        res.status(200).json(data);
+        try {
+            const userId = req.params.userId
+            const data = await this.service.getTrades(userId)
+            res.status(200).json(data);
+        } catch (e) {
+            console.log(e)
+            res.status(500).json({message: 'Server error'})
+        }
     }
 
-    getTrade = async (req: Request, res: Response) => {
-        //logic
-        const data = {}
-        res.status(200).json(data);
+    editTrade = async (req: Request, res: Response) => {
+        try {
+            const payload = req.body
+            const tradeId = req.params.tradeId
+            const data = await this.service.editTrade(tradeId, payload)
+            if (!data) {
+                res.status(404).json({message: 'Couldn\'t find trade'})
+            }
+            res.status(200).json(data);
+        } catch (e) {
+            console.log(e)
+            res.status(500).json({message: 'Server error'})
+        }
+    }
+
+    deleteTrade = async (req: Request, res: Response) => {
+        try {
+            const tradeId = req.params.tradeId
+            const data = await this.service.deleteTrade(tradeId)
+            res.status(200).json(data);
+        } catch (e) {
+            console.log(e)
+            res.status(500).json({message: 'Server error'})
+        }
     }
 
     postTrade = async (req: Request, res: Response) => {
