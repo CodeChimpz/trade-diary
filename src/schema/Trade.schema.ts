@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import {Schema, model} from 'mongoose';
 import {IUser} from "./User.schema";
+import {TradeEnums} from "../types/trade.types";
 
 export interface ITrade {
     ticker: string,
@@ -10,8 +11,9 @@ export interface ITrade {
     enter: number,
     stop: number,
     firstTake: string,
-    secondTake?: string ,
-    thirdTake?: string ,
+    secondTake?: string,
+    thirdTake?: string,
+    currentTake?: TradeEnums.Takes,
     risk: 0.5 | 1 | 2 | 3,
     lost?: number,
     profit?: number
@@ -19,6 +21,7 @@ export interface ITrade {
     amount: number,
     depositAfter?: number,
     resultValue?: number,
+    resultPrice?: number,
     result: string,
     closedManually?: boolean,
     createdBy: Partial<IUser>,
@@ -98,6 +101,15 @@ export const TradeSchema = new Schema<ITrade>({
         trim: true,
         match: /^[0-9]* \/ [0-9]{2}%*$/,
     },
+    currentTake: {
+        minLength: 5,
+        maxLength: 6,
+        type: String,
+        enum: ['first', 'second', 'third'],
+        nullable: true,
+        required: false,
+        trim: true,
+    },
     risk: {
         type: Number,
         enum: [0.5, 1, 2, 3],
@@ -129,11 +141,15 @@ export const TradeSchema = new Schema<ITrade>({
         type: Number,
         nullable: true,
     },
+    resultPrice: {
+        type: Number,
+        nullable: true,
+    },
     result: {
         type: String,
         minLength: 7,
         maxLength: 8,
-        enum: ['Success', 'Failure', 'Process'],
+        enum: ['Success', 'Failure', 'Process','PartiallyClosed'],
         default: 'Process',
         trim: true,
     },

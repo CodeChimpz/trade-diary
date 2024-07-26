@@ -17,6 +17,9 @@ export namespace TradeEnums {
     export enum Results {
         Success = 'Success',
         Failure = 'Failure',
-        Process = 'Process'
+        Process = 'Process',
+        PartiallyClosed = 'PartiallyClosed'
     }
+
+    export type Takes = 'first' | 'second' | 'third'
 }

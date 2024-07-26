@@ -13,10 +13,10 @@ app.use(bodyParser.json());
 app.get('/trades/:userId', tradeController.getTrades);
 
 // Get all trades for user id
-app.put('/trades/:tradeID', tradeController.editTrade);
+app.put('/trade/:tradeId', tradeController.editTrade);
 
 // Remove trade
-app.delete('/trades/:tradeID', tradeController.deleteTrade);
+app.delete('/trade/:tradeId', tradeController.deleteTrade);
 
 // Create a new trade
 app.post('/trade/:userId', tradeController.postTrade);

@@ -49,14 +49,35 @@ export class CalcService {
         return {value: +take.split('/')[0], percent}
     }
 
-    static calcClosedTrade(trade: ITrade) {
-        const isProfit = trade.result === TradeEnums.Results.Success
-        const resultValue = trade.resultValue ||
-            (isProfit ? trade.profit : trade.lost) || 0
-        const depositAfter = isProfit ? resultValue + trade.depositBefore : trade.depositBefore - resultValue
+    static calcClosedManually(trade: ITrade, resultPrice: number, resultValue?: number) {
+        if (resultPrice < trade.stop) {
+            return null
+        }
+        const result = resultValue || trade.amount
+        const diff = result * resultPrice
+        const depositAfter = trade.depositBefore + diff
         return {
-            resultValue,
-            depositAfter
+            resultValue: result,
+            resultPrice,
+            depositAfter,
+            closedManually: true
+        }
+    }
+
+    // static calcPartialTake(trade: ITrade, take: TradeEnums.Takes) {
+    //
+    // }
+
+    static calcSuccess(trade: ITrade, success: boolean) {
+        const profit = trade.profit || 0
+        const loss = trade.lost || 0
+        const depositAfter = trade.depositBefore + (success ?
+            profit : loss) || 0
+        return {
+            resultValue: trade.amount,
+            resultPrice: null,
+            depositAfter,
+            closedManually: false
         }
     }
 }

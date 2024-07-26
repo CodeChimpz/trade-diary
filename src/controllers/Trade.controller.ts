@@ -9,13 +9,17 @@ export class TradeController {
     }
 
     getTrades = async (req: Request, res: Response) => {
+        //todo: pagination
         try {
             const userId = req.params.userId
             const data = await this.service.getTrades(userId)
-            res.status(200).json(data);
+            res.status(200).json({
+                length: data.length,
+                data
+            });
         } catch (e) {
             console.log(e)
-            res.status(500).json({message: 'Server error'})
+            res.status(500).json({message: 'Server error : ' + e})
         }
     }
 
@@ -25,7 +29,7 @@ export class TradeController {
             const tradeId = req.params.tradeId
             const data = await this.service.editTrade(tradeId, payload)
             if (!data) {
-                res.status(404).json({message: 'Couldn\'t find trade'})
+                return res.status(404).json({message: 'Couldn\'t find trade or recived an incorrect payload'})
             }
             res.status(200).json(data);
         } catch (e) {
@@ -52,19 +56,13 @@ export class TradeController {
             const userId = req.params.userId
             const data = await this.service.postTrade(userId, payload)
             if (!data) {
-                res.status(404).json({message: 'Couldn\'t post trade , check data accuracy and user id'})
+                return res.status(404).json({message: 'Couldn\'t post trade , check data accuracy and user id'})
             }
             res.status(200).json(data);
         } catch (e) {
             console.log(e)
             res.status(500).json({message: 'Server error'})
         }
-    }
-
-    closeTrade = async (req: Request, res: Response) => {
-        //logic
-        const data = {}
-        res.status(200).json(data);
     }
 }
 

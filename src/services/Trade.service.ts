@@ -25,6 +25,7 @@ export class TradeService {
     }
 
     deleteTrade = async (tradeId: string,) => {
+        console.log('debug', tradeId)
         return this.schema.findOneAndDelete({_id: tradeId})
     }
 
@@ -33,17 +34,36 @@ export class TradeService {
         if (!trade || trade.result !== TradeEnums.Results.Process) {
             return null
         }
-        const {result, resultValue, closedManually} = payload
-        trade.result = result
-        trade.resultValue = resultValue
-        trade.closedManually = closedManually
-        const calculated = CalcService.calcClosedTrade(trade)
-        trade.resultValue = calculated.resultValue
-        trade.depositAfter = calculated.depositAfter
-        const updated = await trade.save()
-        return this.formatTradePayload(updated)
+        let updated: Partial<ITrade> = {}
+        if (payload.closedManually) {
+            const calc = CalcService.calcClosedManually(trade, payload.resultPrice, payload?.resultValue)
+            if (!calc) {
+                return null
+            }
+            updated = calc
+        } else {
+            switch (payload.result) {
+                case TradeEnums.Results.PartiallyClosed:
+                    return this.calcPartialTake(trade, payload)
+                case TradeEnums.Results.Success:
+                    return CalcService.calcSuccess(trade, true)
+                case TradeEnums.Results.Failure:
+                    return CalcService.calcSuccess(trade, false)
+            }
+        }
+        const result = {
+            ...trade,
+            ...updated,
+            result: payload.result
+        }
+        const saved = await this.schema.findOneAndUpdate({_id: tradeId}, result)
+        return saved ? this.formatTradePayload(saved) : null
     }
 
+    private calcPartialTake(trade: ITrade, payload: TradeUpdateData) {
+        trade.currentTake = payload.take
+        return trade
+    }
 
     postTrade = async (userId: string, payload: TradeRequestData) => {
         const user = await this.userService.getById(userId)
