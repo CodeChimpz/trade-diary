@@ -15,8 +15,8 @@ export type TradeRequestData = {
 
 export type TradeUpdateData = {
     result: TradeEnums.Results,
-    resultPrice: number,
+    resultPrice?: number,
     resultValue?: number,
-    take: TradeEnums.Takes,
+    take?: TradeEnums.Takes,
     closedManually: boolean
 }
