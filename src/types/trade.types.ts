@@ -21,5 +21,7 @@ export namespace TradeEnums {
         PartiallyClosed = 'PartiallyClosed'
     }
 
-    export type Takes = 'first' | 'second' | 'third'
+    export enum Scenarios {
+        First = 'First', Second = 'Second', Third = 'Third', Stop = 'Stop'
+    }
 }

@@ -13,7 +13,6 @@ export interface ITrade {
     firstTake: string,
     secondTake?: string,
     thirdTake?: string,
-    currentTake?: TradeEnums.Takes,
     risk: 0.5 | 1 | 2 | 3,
     lost?: number,
     profit?: number
@@ -21,9 +20,10 @@ export interface ITrade {
     amount: number,
     depositAfter?: number,
     resultValue?: number,
-    resultPrice?: number,
+    resultPrice?: number | null,
     result: string,
     closedManually?: boolean,
+    closeScenario?: TradeEnums.Scenarios,
     createdBy: Partial<IUser>,
     dateCreated: Date
 }
@@ -101,11 +101,11 @@ export const TradeSchema = new Schema<ITrade>({
         trim: true,
         match: /^[0-9]* \/ [0-9]{2}%*$/,
     },
-    currentTake: {
+    closeScenario: {
         minLength: 5,
         maxLength: 6,
         type: String,
-        enum: ['first', 'second', 'third'],
+        enum: ['First', 'Second', 'Third', 'Stop'],
         nullable: true,
         required: false,
         trim: true,
@@ -149,7 +149,7 @@ export const TradeSchema = new Schema<ITrade>({
         type: String,
         minLength: 7,
         maxLength: 8,
-        enum: ['Success', 'Failure', 'Process','PartiallyClosed'],
+        enum: ['Success', 'Failure', 'Process', 'PartiallyClosed'],
         default: 'Process',
         trim: true,
     },

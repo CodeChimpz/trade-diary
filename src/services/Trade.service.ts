@@ -34,35 +34,24 @@ export class TradeService {
         if (!trade || trade.result !== TradeEnums.Results.Process) {
             return null
         }
-        let updated: Partial<ITrade> = {}
-        if (payload.closedManually) {
-            const calc = CalcService.calcClosedManually(trade, payload.resultPrice, payload?.resultValue)
-            if (!calc) {
-                return null
-            }
-            updated = calc
-        } else {
-            switch (payload.result) {
-                case TradeEnums.Results.PartiallyClosed:
-                    return this.calcPartialTake(trade, payload)
-                case TradeEnums.Results.Success:
-                    return CalcService.calcSuccess(trade, true)
-                case TradeEnums.Results.Failure:
-                    return CalcService.calcSuccess(trade, false)
-            }
-        }
+        const updated = await (payload.closedManually ? this.calcClosedManually(trade, payload) : this.calcClosedScenario(trade, payload))
         const result = {
             ...trade,
             ...updated,
-            result: payload.result
         }
         const saved = await this.schema.findOneAndUpdate({_id: tradeId}, result)
         return saved ? this.formatTradePayload(saved) : null
     }
 
-    private calcPartialTake(trade: ITrade, payload: TradeUpdateData) {
-        trade.currentTake = payload.take
-        return trade
+    private calcClosedManually(trade: ITrade, payload: TradeUpdateData): Partial<ITrade> {
+        return CalcService.calcClosedManually(trade, payload.resultPrice || 0)
+    }
+
+    private calcClosedScenario(trade: ITrade, payload: TradeUpdateData): Partial<ITrade> {
+        if (payload.scenario !== TradeEnums.Scenarios.Stop) {
+            return CalcService.calcSuccessScenario(trade, payload.scenario)
+        }
+        return CalcService.calcFailure(trade)
     }
 
     postTrade = async (userId: string, payload: TradeRequestData) => {
@@ -88,7 +77,7 @@ export class TradeService {
         }
         data.amount = CalcService.getTradeAmount(data)
         data.lost = CalcService.getLost(data)
-        data.profit = CalcService.getProfit(data)
+        data.profit = CalcService.getProfit(data).value
         return data
     }
 
