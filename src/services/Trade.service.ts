@@ -35,12 +35,9 @@ export class TradeService {
             return null
         }
         const updated = await (payload.closedManually ? this.calcClosedManually(trade, payload) : this.calcClosedScenario(trade, payload))
-        const result = {
-            ...trade,
-            ...updated,
-        }
-        const saved = await this.schema.findOneAndUpdate({_id: tradeId}, result)
-        return saved ? this.formatTradePayload(saved) : null
+        const saved = await this.schema.findOneAndUpdate({_id: tradeId}, updated)
+        console.log('updated',updated)
+        return this.schema.findById(tradeId)
     }
 
     private calcClosedManually(trade: ITrade, payload: TradeUpdateData): Partial<ITrade> {
