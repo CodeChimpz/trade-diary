@@ -8,48 +8,52 @@ export class CalcService {
 
     static getTradeAmount(trade: ITrade) {
         //todo : float precision
-        const {depositBefore, risk, enter, stop} = trade
-        const riskAmount = this.getPercent(depositBefore, risk)
+        const {depositBefore, riskPercent, enter, stop} = trade
+        const riskAmount = this.getPercent(depositBefore, riskPercent)
         const stopDiff = enter - stop
-        const amount = Math.round(riskAmount / stopDiff)
-        // console.log('debug-getTradeAmount', depositBefore, risk, enter, riskAmount, stop, stopDiff, amount)
-        return amount
+        return riskAmount / stopDiff
     }
 
     static getLost(trade: ITrade) {
-        if (!trade.amount) {
-            return 0
-        }
-        // console.log('debug-getLost', trade.amount * trade.stop, trade.risk * trade.depositBefore)
-        return Math.round(trade.amount * trade.stop)
-    }
-
-    static getProfit(trade: ITrade, partialTake: boolean, take?: TradeEnums.Scenarios) {
-        if (!trade.amount) {
+        if (!trade.quantity) {
             return {
                 amount: 0,
                 value: 0
             }
         }
-        const firstTake = this.getTake(trade.firstTake)
-        const isFullSecond = !trade.secondTake || take === TradeEnums.Scenarios.First
-        const isFullThird = !trade.thirdTake || take === TradeEnums.Scenarios.Second
+        const {quantity, depositBefore, riskPercent} = trade
+        return {
+            amount: quantity,
+            value: this.getPercent(depositBefore, riskPercent)
+        }
+    }
+
+    static getProfit(trade: ITrade, partialTake: boolean, take: TradeEnums.Scenarios | null) {
+        if (!trade.quantity) {
+            return {
+                amount: 0,
+                value: 0
+            }
+        }
+        const firstTake = this.getTake(trade.firstTakePrice)
+        const isFullSecond = !trade.secondTakePrice || take === TradeEnums.Scenarios.First
+        const isFullThird = !trade.thirdTakePrice || take === TradeEnums.Scenarios.Second
         const secondTake = isFullSecond ? {
             value: 0,
             percent: 0
-        } : this.getTake(trade.secondTake)
+        } : this.getTake(trade.secondTakePrice)
         const thirdTake = isFullThird ? {
             value: 0,
             percent: 0
-        } : this.getTake(trade.thirdTake)
+        } : this.getTake(trade.thirdTakePrice)
         if (!partialTake && thirdTake.percent + secondTake.percent + firstTake.percent !== 100) {
             console.log('takes', thirdTake.percent, secondTake.percent, firstTake.percent)
             //todo: handle
             throw new Error('Inconsistent takes supplied')
         }
-        const firstValue = this.getTakeValue(trade.amount, thirdTake.value, thirdTake.percent)
-        const secondValue = this.getTakeValue(trade.amount, secondTake.value, secondTake.percent)
-        const thirdValue = this.getTakeValue(trade.amount, firstTake.value, firstTake.percent)
+        const firstValue = this.getTakeValue(trade, thirdTake.value, thirdTake.percent)
+        const secondValue = this.getTakeValue(trade, secondTake.value, secondTake.percent)
+        const thirdValue = this.getTakeValue(trade, firstTake.value, firstTake.percent)
         return {
             amount: firstValue.percent + secondValue.percent + thirdValue.percent,
             value: firstValue.value + secondValue.value + thirdValue.value
@@ -64,41 +68,45 @@ export class CalcService {
         return {value: +take.split('/')[0], percent}
     }
 
-    static getTakeValue(amount: number, takeValue: number, takePercent: number) {
+    static getTakeValue(trade: ITrade, takeValue: number, takePercent: number) {
         //todo: util
         if (!takeValue) {
             return {percent: 0, value: 0}
         }
-        const percent = amount / 100 * takePercent
+        const percent = trade.quantity / 100 * takePercent
         return {
-            percent, value: percent * takeValue
+            percent, value: percent * (takeValue - trade.enter)
         }
     }
 
     static calcClosedManually(trade: ITrade, resultPrice: number) {
-        const resultValue = trade.amount
-        const diff = Math.round(resultValue * resultPrice)
-        const depositAfter = trade.depositBefore + diff
+        const resultValue = trade.quantity
+        const profit = resultValue * (resultPrice - trade.enter)
+        const depositAfter = trade.depositBefore + profit
         return {
             result: depositAfter < trade.depositBefore ? TradeEnums.Results.Failure : TradeEnums.Results.Success,
             resultValue: resultValue,
+            profit,
             resultPrice,
             depositAfter,
             closedManually: true
         }
     }
 
-    static calcSuccessScenario(trade: ITrade, take?: TradeEnums.Scenarios) {
-        const successScenario = (!trade.secondTake && take === TradeEnums.Scenarios.First) ||
-        (!trade.thirdTake && take === TradeEnums.Scenarios.Second) || (trade.thirdTake && take === TradeEnums.Scenarios.Third) ? TradeEnums.Results.Success :
-            TradeEnums.Results.PartiallyClosed
-        const profit = this.getProfit(trade, successScenario === TradeEnums.Results.PartiallyClosed,take)
+    static calcSuccessScenario(trade: ITrade, take: TradeEnums.Scenarios | null) {
+        const successScenario =
+            (!trade.secondTakePrice && take === TradeEnums.Scenarios.First) ||
+            (!trade.thirdTakePrice && take === TradeEnums.Scenarios.Second) ||
+            (trade.thirdTakePrice && take === TradeEnums.Scenarios.Third) ? TradeEnums.Results.Success :
+                TradeEnums.Results.PartiallyClosed
+        const profit = this.getProfit(trade, successScenario === TradeEnums.Results.PartiallyClosed, take)
         const depositAfter = trade.depositBefore + profit.value
         return {
             result: successScenario,
             resultValue: profit.amount,
             resultPrice: null,
             closeScenario: take,
+            profit: profit.value,
             depositAfter,
             closedManually: false
         }
@@ -109,7 +117,7 @@ export class CalcService {
         const depositAfter = trade.depositBefore - loss
         return {
             result: 'Failure',
-            resultValue: trade.amount,
+            resultValue: trade.quantity,
             resultPrice: trade.stop,
             depositAfter,
             closeScenario: TradeEnums.Scenarios.Stop,

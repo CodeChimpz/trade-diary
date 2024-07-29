@@ -1,16 +1,12 @@
 export namespace TradeEnums {
-    export enum Positions {
-        long = 'Long',
-        short = 'Short'
-    }
 
-    export enum Trends {
-        up = 'Up', down = 'Down'
-    }
+    export type Positions = 'Long' | 'Short'
 
-    export enum Orders {
-        limit = 'Limit', market = 'Market'
-    }
+    export type Trends =
+        'Up' | 'Down'
+
+    export type Orders =
+        'Limit' | 'Market'
 
     export type Risks = 0.5 | 1 | 2 | 3
 

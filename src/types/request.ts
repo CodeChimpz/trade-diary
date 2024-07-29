@@ -7,14 +7,13 @@ export type TradeRequestData = {
     order: TradeEnums.Orders,
     enter: number,
     stop: number,
-    firstTake: string,
-    secondTake?: string,
-    thirdTake?: string,
-    risk: TradeEnums.Risks,
+    firstTakePrice: string,
+    secondTakePrice?: string,
+    thirdTakePrice?: string,
+    riskPercent: TradeEnums.Risks,
 }
 
 export type TradeUpdateData = {
     resultPrice?: number,
-    scenario: TradeEnums.Scenarios,
-    closedManually: boolean
+    scenario: TradeEnums.Scenarios | null,
 }

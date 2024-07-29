@@ -2,31 +2,35 @@ import * as mongoose from 'mongoose';
 import {Schema, model} from 'mongoose';
 import {IUser} from "./User.schema";
 import {TradeEnums} from "../types/trade.types";
+import {ObjectId} from "mongodb";
 
 export interface ITrade {
+    _id: string,
     ticker: string,
     position: 'Long' | 'Short',
     trend: 'Up' | 'Down',
     order: 'Limit' | 'Market',
     enter: number,
     stop: number,
-    firstTake: string,
-    secondTake?: string,
-    thirdTake?: string,
-    risk: 0.5 | 1 | 2 | 3,
-    lost?: number,
-    profit?: number
+    firstTakePrice: string,
+    secondTakePrice?: string,
+    thirdTakePrice?: string,
+    riskPercent: 0.5 | 1 | 2 | 3,
+    lost: number | null,
+    profit: number | null,
     depositBefore: number,
-    amount: number,
-    depositAfter?: number,
-    resultValue?: number,
-    resultPrice?: number | null,
+    quantity: number,
+    depositAfter: number | null,
+    resultValue: number | null,
+    resultPrice: number | null,
     result: string,
-    closedManually?: boolean,
-    closeScenario?: TradeEnums.Scenarios,
+    closedManually: boolean,
+    closeScenario: TradeEnums.Scenarios | null,
     createdBy: Partial<IUser>,
     dateCreated: Date
 }
+
+export type ITrade_ID = Document  & ITrade & { _id: string }
 
 export const TradeSchema = new Schema<ITrade>({
     ticker: {
@@ -77,7 +81,7 @@ export const TradeSchema = new Schema<ITrade>({
         max: 100000,
         required: true,
     },
-    firstTake: {
+    firstTakePrice: {
         minLength: 7,
         maxLength: 100,
         type: String,
@@ -85,7 +89,7 @@ export const TradeSchema = new Schema<ITrade>({
         trim: true,
         match: /^[0-9]* \/ [0-9]{2,3}%*$/,
     },
-    secondTake: {
+    secondTakePrice: {
         minLength: 7,
         maxLength: 100,
         type: String,
@@ -93,7 +97,7 @@ export const TradeSchema = new Schema<ITrade>({
         trim: true,
         match: /^[0-9]* \/ [0-9]{2}%*$/,
     },
-    thirdTake: {
+    thirdTakePrice: {
         minLength: 7,
         maxLength: 100,
         type: String,
@@ -110,7 +114,7 @@ export const TradeSchema = new Schema<ITrade>({
         required: false,
         trim: true,
     },
-    risk: {
+    riskPercent: {
         type: Number,
         enum: [0.5, 1, 2, 3],
         default: 1,
@@ -128,7 +132,7 @@ export const TradeSchema = new Schema<ITrade>({
         type: Number,
         required: true,
     },
-    amount: {
+    quantity: {
         type: Number,
         required: false,
     },

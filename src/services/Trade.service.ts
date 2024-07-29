@@ -1,9 +1,10 @@
-import {ITrade, Trade, TradeModel} from "../schema/Trade.schema";
+import {ITrade, ITrade_ID, Trade, TradeModel} from "../schema/Trade.schema";
 import {userService, UserService} from "./User.service";
 import {TradeRequestData, TradeUpdateData} from "../types/request";
 import {IUser} from "../schema/User.schema";
 import {CalcService} from "../util/Calc.service";
 import {TradeEnums} from "../types/trade.types";
+import {TradeResponse} from "../types/response";
 
 export class TradeService {
     schema: TradeModel
@@ -34,10 +35,10 @@ export class TradeService {
         if (!trade || trade.result !== TradeEnums.Results.Process) {
             return null
         }
-        const updated = await (payload.closedManually ? this.calcClosedManually(trade, payload) : this.calcClosedScenario(trade, payload))
-        const saved = await this.schema.findOneAndUpdate({_id: tradeId}, updated)
-        console.log('updated',updated)
-        return this.schema.findById(tradeId)
+        const updated = await (!payload.scenario ? this.calcClosedManually(trade, payload) : this.calcClosedScenario(trade, payload))
+        await this.schema.findOneAndUpdate({_id: tradeId}, updated)
+        const saved = await this.schema.findById(tradeId)
+        return saved ? this.formatTradePayload(saved) : null
     }
 
     private calcClosedManually(trade: ITrade, payload: TradeUpdateData): Partial<ITrade> {
@@ -46,7 +47,7 @@ export class TradeService {
 
     private calcClosedScenario(trade: ITrade, payload: TradeUpdateData): Partial<ITrade> {
         if (payload.scenario !== TradeEnums.Scenarios.Stop) {
-            return CalcService.calcSuccessScenario(trade, payload.scenario)
+            return CalcService.calcSuccessScenario(trade, payload.scenario || null)
         }
         return CalcService.calcFailure(trade)
     }
@@ -62,24 +63,59 @@ export class TradeService {
     }
 
     private createTradePayload = (payload: TradeRequestData, userData: IUser): ITrade => {
-        const data: ITrade = {
+        const data: Partial<ITrade> = {
             ...payload,
             depositBefore: userData.currentDeposit || userData.initialDeposit,
             result: 'Process',
             createdBy: userData,
             dateCreated: new Date(),
-            amount: 0,
+            quantity: 0,
             lost: 0,
-            profit: 0
+            profit: 0,
+            closeScenario: null,
+            closedManually: false,
+            depositAfter: null,
+            resultPrice: null,
+            resultValue: null,
         }
-        data.amount = CalcService.getTradeAmount(data)
-        data.lost = CalcService.getLost(data)
-        data.profit = CalcService.getProfit(data,false).value
-        return data
+        const dataCast = data as ITrade
+        data.quantity = CalcService.getTradeAmount(dataCast)
+        data.lost = CalcService.getLost(dataCast).value
+        data.profit = CalcService.getProfit(dataCast, false, null).value
+        return dataCast
     }
 
-    private formatTradePayload = (data: ITrade) => {
-        return data
+    private formatTradePayload = (data: ITrade): TradeResponse => {
+        const enterPrice = data.enter
+        const stopPrice = data.stop
+        return {
+            id: data._id,
+            ticker: data.ticker,
+            position: data.position,
+            trend: data.trend,
+            order: data.order,
+            stopPrice,
+            enterPrice,
+            firstTakePrice: data.firstTakePrice,
+            secondTakePrice: data?.secondTakePrice,
+            thirdTakePrice: data?.thirdTakePrice,
+            riskPercent: data.riskPercent,
+            quantity: data.quantity,
+            // quantityLost: data.quantity,
+            quantityLostInUSD: CalcService.getPercent(data.depositBefore, data.riskPercent),
+            // quantityProfit: data.quantity,
+            quantityProfitInUSD: data.profit,
+            depositBefore: data.depositBefore,
+            depositAfter: data.depositAfter,
+            resultInUSD: data.resultValue,
+            resultQuantity: null,
+            resultPrice: data.resultPrice,
+            result: data.result,
+            closedManually: data.closedManually,
+            closeScenario: data.closeScenario,
+            createdBy: data.createdBy,
+            dateCreated: data.dateCreated
+        }
     }
 }
 
