@@ -24,7 +24,7 @@ export class CalcService {
         return Math.round(trade.amount * trade.stop)
     }
 
-    static getProfit(trade: ITrade, take?: TradeEnums.Scenarios) {
+    static getProfit(trade: ITrade, partialTake: boolean, take?: TradeEnums.Scenarios) {
         if (!trade.amount) {
             return {
                 amount: 0,
@@ -32,16 +32,18 @@ export class CalcService {
             }
         }
         const firstTake = this.getTake(trade.firstTake)
-        const secondTake = !trade.secondTake || take === TradeEnums.Scenarios.First ? {
+        const isFullSecond = !trade.secondTake || take === TradeEnums.Scenarios.First
+        const isFullThird = !trade.thirdTake || take === TradeEnums.Scenarios.Second
+        const secondTake = isFullSecond ? {
             value: 0,
             percent: 0
         } : this.getTake(trade.secondTake)
-        const thirdTake = !trade.thirdTake || take === TradeEnums.Scenarios.Second ? {
+        const thirdTake = isFullThird ? {
             value: 0,
             percent: 0
         } : this.getTake(trade.thirdTake)
-        if (thirdTake.percent + secondTake.percent + firstTake.percent !== 100) {
-            console.log('takes',thirdTake.percent , secondTake.percent , firstTake.percent)
+        if (!partialTake && thirdTake.percent + secondTake.percent + firstTake.percent !== 100) {
+            console.log('takes', thirdTake.percent, secondTake.percent, firstTake.percent)
             //todo: handle
             throw new Error('Inconsistent takes supplied')
         }
@@ -87,11 +89,11 @@ export class CalcService {
     }
 
     static calcSuccessScenario(trade: ITrade, take?: TradeEnums.Scenarios) {
-        const profit = this.getProfit(trade, take)
-        const depositAfter = trade.depositBefore + profit.value
         const successScenario = (!trade.secondTake && take === TradeEnums.Scenarios.First) ||
         (!trade.thirdTake && take === TradeEnums.Scenarios.Second) || (trade.thirdTake && take === TradeEnums.Scenarios.Third) ? TradeEnums.Results.Success :
             TradeEnums.Results.PartiallyClosed
+        const profit = this.getProfit(trade, successScenario === TradeEnums.Results.PartiallyClosed,take)
+        const depositAfter = trade.depositBefore + profit.value
         return {
             result: successScenario,
             resultValue: profit.amount,

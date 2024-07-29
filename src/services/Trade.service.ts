@@ -74,7 +74,7 @@ export class TradeService {
         }
         data.amount = CalcService.getTradeAmount(data)
         data.lost = CalcService.getLost(data)
-        data.profit = CalcService.getProfit(data).value
+        data.profit = CalcService.getProfit(data,false).value
         return data
     }
 
