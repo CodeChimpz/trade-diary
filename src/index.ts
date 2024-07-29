@@ -2,7 +2,7 @@ import {tradeController} from "./controllers/Trade.controller";
 import {config} from "dotenv";
 import {dbConnect} from "./connector/mongo";
 import {JoiValidatorMiddleware} from "./middleware/validator";
-import {schemaTrade} from "./validation/request.validation";
+import {schemaTrade, tradeUpdateSchema} from "./validation/request.validation";
 
 config()
 const express = require('express');
@@ -15,13 +15,13 @@ app.use(bodyParser.json());
 app.get('/trades/:userId', tradeController.getTrades);
 
 // Get all trades for user id
-app.put('/trade/:tradeId', tradeController.editTrade);
+app.put('/trade/:tradeId', JoiValidatorMiddleware(tradeUpdateSchema), tradeController.editTrade);
 
 // Remove trade
 app.delete('/trade/:tradeId', tradeController.deleteTrade);
 
 // Create a new trade
-app.post('/trade/:userId',JoiValidatorMiddleware(schemaTrade), tradeController.postTrade);
+app.post('/trade/:userId', JoiValidatorMiddleware(schemaTrade), tradeController.postTrade);
 
 // Start the server
 const PORT = process.env.PORT;

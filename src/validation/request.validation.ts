@@ -24,3 +24,11 @@ export const schemaTrade = Joi.object({
     thirdTakePrice: Joi.string().pattern(/^[0-9]* \/ [0-9]{2,3}%*$/).optional(),
     riskPercent: Joi.string().valid(...Risks).required(),
 });
+
+
+const Scenarios = ['First', 'Second', 'Third', 'Stop'];
+
+export const tradeUpdateSchema = Joi.object({
+    resultPrice: Joi.number().optional(),
+    scenario: Joi.string().valid(...Scenarios).allow(null).required()
+});
