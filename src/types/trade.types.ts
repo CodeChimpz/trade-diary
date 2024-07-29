@@ -1,6 +1,7 @@
 export namespace TradeEnums {
 
     export type Positions = 'Long' | 'Short'
+    export type Tickers = 'BTC/USDT' | 'ETH/USDT'
 
     export type Trends =
         'Up' | 'Down'

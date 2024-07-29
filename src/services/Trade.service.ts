@@ -1,10 +1,10 @@
 import {ITrade, ITrade_ID, Trade, TradeModel} from "../schema/Trade.schema";
 import {userService, UserService} from "./User.service";
-import {TradeRequestData, TradeUpdateData} from "../types/request";
+import {TradeRequestData, TradeUpdateData} from "../types/request.types";
 import {IUser} from "../schema/User.schema";
 import {CalcService} from "../util/Calc.service";
 import {TradeEnums} from "../types/trade.types";
-import {TradeResponse} from "../types/response";
+import {TradeResponse} from "../types/response.types";
 
 export class TradeService {
     schema: TradeModel
@@ -61,7 +61,7 @@ export class TradeService {
         const created = await this.schema.create(data)
         return this.formatTradePayload(created)
     }
-
+    //TODO: Trade format service
     private createTradePayload = (payload: TradeRequestData, userData: IUser): ITrade => {
         const data: Partial<ITrade> = {
             ...payload,

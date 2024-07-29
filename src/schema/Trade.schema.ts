@@ -6,7 +6,7 @@ import {ObjectId} from "mongodb";
 
 export interface ITrade {
     _id: string,
-    ticker: string,
+    ticker: 'BTC/USDT' | 'ETH/USDT',
     position: 'Long' | 'Short',
     trend: 'Up' | 'Down',
     order: 'Limit' | 'Market',

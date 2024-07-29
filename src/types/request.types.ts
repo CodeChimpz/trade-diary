@@ -1,7 +1,7 @@
 import {TradeEnums} from "./trade.types";
 
 export type TradeRequestData = {
-    ticker: string,
+    ticker: TradeEnums.Tickers,
     position: TradeEnums.Positions,
     trend: TradeEnums.Trends,
     order: TradeEnums.Orders,
