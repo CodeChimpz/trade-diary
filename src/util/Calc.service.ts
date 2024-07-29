@@ -86,7 +86,7 @@ export class CalcService {
         const depositAfter = trade.depositBefore + profit
         return {
             result: depositAfter < trade.depositBefore ? TradeEnums.Results.Failure : TradeEnums.Results.Success,
-            resultValue: resultValue,
+            resultValue: profit,
             profit,
             resultPrice,
             depositAfter,
@@ -108,7 +108,7 @@ export class CalcService {
         const depositAfter = trade.depositBefore + profit.value
         return {
             result: successScenario,
-            resultValue: profit.amount,
+            resultValue: profit.value,
             resultPrice: null,
             closeScenario: take,
             profit: profit.value,
@@ -122,7 +122,7 @@ export class CalcService {
         const depositAfter = trade.depositBefore - loss
         return {
             result: 'Failure',
-            resultValue: trade.quantity,
+            resultValue: loss,
             resultPrice: trade.stop,
             depositAfter,
             closeScenario: TradeEnums.Scenarios.Stop,

@@ -21,7 +21,7 @@ export type TradeResponse = {
     depositBefore: number,
     depositAfter: number | null,
     resultInUSD: number | null,
-    resultQuantity: number | null,
+    // resultQuantity: number | null,
     resultPrice: number | null,
     result: string,
     closedManually: boolean,
