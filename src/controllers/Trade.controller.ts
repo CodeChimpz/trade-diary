@@ -34,7 +34,7 @@ export class TradeController {
             res.status(200).json(data);
         } catch (e) {
             console.log(e)
-            res.status(500).json({message: 'Server error'})
+            res.status(500).json({message: 'Server error : ' + e})
         }
     }
 
@@ -45,7 +45,7 @@ export class TradeController {
             res.status(200).json(data);
         } catch (e) {
             console.log(e)
-            res.status(500).json({message: 'Server error'})
+            res.status(500).json({message: 'Server error : ' + e})
         }
     }
 
@@ -61,7 +61,7 @@ export class TradeController {
             res.status(200).json(data);
         } catch (e) {
             console.log(e)
-            res.status(500).json({message: 'Server error'})
+            res.status(500).json({message: 'Server error : ' + e})
         }
     }
 }

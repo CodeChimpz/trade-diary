@@ -10,7 +10,7 @@ export class CalcService {
         //todo : float precision
         const {depositBefore, riskPercent, enter, stop} = trade
         const riskAmount = this.getPercent(depositBefore, riskPercent)
-        const stopDiff = enter - stop
+        const stopDiff = Math.abs(enter - stop)
         return riskAmount / stopDiff
     }
 
@@ -75,13 +75,14 @@ export class CalcService {
         }
         const percent = trade.quantity / 100 * takePercent
         return {
-            percent, value: percent * (takeValue - trade.enter)
+            percent, value: percent * Math.abs(takeValue - trade.enter)
         }
     }
 
     static calcClosedManually(trade: ITrade, resultPrice: number) {
         const resultValue = trade.quantity
-        const profit = resultValue * (resultPrice - trade.enter)
+        const diff = trade.position === 'Short' ? Math.abs(resultPrice - trade.enter) :  (resultPrice - trade.enter)
+        const profit = resultValue * diff
         const depositAfter = trade.depositBefore + profit
         return {
             result: depositAfter < trade.depositBefore ? TradeEnums.Results.Failure : TradeEnums.Results.Success,
@@ -94,11 +95,15 @@ export class CalcService {
     }
 
     static calcSuccessScenario(trade: ITrade, take: TradeEnums.Scenarios | null) {
-        const successScenario =
-            (!trade.secondTakePrice && take === TradeEnums.Scenarios.First) ||
-            (!trade.thirdTakePrice && take === TradeEnums.Scenarios.Second) ||
-            (trade.thirdTakePrice && take === TradeEnums.Scenarios.Third) ? TradeEnums.Results.Success :
-                TradeEnums.Results.PartiallyClosed
+        const successClause = (!trade.secondTakePrice && take === TradeEnums.Scenarios.First) ||
+            (!trade.thirdTakePrice && take === TradeEnums.Scenarios.Second) || (!!trade.thirdTakePrice && take === TradeEnums.Scenarios.Third)
+        const errorClause = (!!trade.firstTakePrice && take === TradeEnums.Scenarios.First) ||
+            (!!trade.secondTakePrice && take === TradeEnums.Scenarios.Second) || (!!trade.thirdTakePrice && take === TradeEnums.Scenarios.Third)
+        if (!errorClause) {
+            throw new Error('Provided Take not corresponding to existing ones')
+        }
+        const successScenario = successClause ? TradeEnums.Results.Success :
+            TradeEnums.Results.PartiallyClosed
         const profit = this.getProfit(trade, successScenario === TradeEnums.Results.PartiallyClosed, take)
         const depositAfter = trade.depositBefore + profit.value
         return {
